@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hasil Dekripsi</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔓 Hasil Dekripsi</h1>
+      {% if decrypted_message is defined and decrypted_message %}
+      <p><strong>Pesan Terdekripsi:</strong></p>
+      <textarea readonly>{{ decrypted_message }}</textarea>
+      {% else %}
+      <p>Tidak ada pesan yang dapat didekripsi.</p>
+      {% endif %}
+      <hr />
+      <a href="{{ url_for('index') }}">🏠 Kembali ke Beranda</a>
+    </div>
+  </body>
+</html>

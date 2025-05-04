@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Audio Steganografi</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Audio Steganografi</h1>
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <ul class="flash">
+        {% for category, message in messages %}
+        <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %} {% endwith %}
+      <form method="POST" enctype="multipart/form-data">
+        <label for="message">Pesan Rahasia:</label>
+        <textarea name="message" required></textarea>
+
+        <label for="audio_file">File Audio (FLAC/WAV):</label>
+        <input type="file" name="audio_file" accept=".flac,.wav" required />
+
+        <button type="submit">Enkripsi & Sisipkan</button>
+      </form>
+
+      <hr />
+      <a href="{{ url_for('decrypt') }}">🔓 Halaman Dekripsi</a>
+    </div>
+  </body>
+</html>

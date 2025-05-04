@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Halaman Dekripsi</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div>
+        {% with messages = get_flashed_messages(with_categories=true) %} {% if
+        messages %}
+        <ul class="flash">
+          {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %} {% endwith %}
+      </div>
+      <h1>🔓 Halaman Dekripsi</h1>
+      <form method="POST" enctype="multipart/form-data">
+        <label for="audio_file_decrypt">Pilih File Audio</label>
+        <input type="file" name="audio_file_decrypt" required />
+        <br />
+        <label for="private_key_file">Pilih File Kunci Pribadi</label>
+        <input type="file" name="private_key_file" required />
+        <br />
+        <button type="submit">Dekripsi Pesan</button>
+      </form>
+      <hr />
+      <a href="{{ url_for('index') }}">🏠 Kembali ke Beranda</a>
+    </div>
+  </body>
+</html>

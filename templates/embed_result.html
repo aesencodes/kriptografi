@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Hasil Penyisipan</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>✅ Penyisipan Berhasil</h1>
+      <p><strong>Pesan Terenkripsi (Base64):</strong></p>
+      <textarea readonly>{{ encrypted_message }}</textarea>
+
+      <p><strong>Unduh Audio dengan Pesan Tersembunyi:</strong></p>
+      <a
+        href="{{ url_for('static', filename='uploads/' ~ audio_path) }}"
+        download
+        >🎧 Unduh Audio</a
+      >
+
+      <p><strong>File Kunci Privat:</strong></p>
+      <a
+        href="{{ url_for('static', filename='keys/' ~ private_key_file) }}"
+        download
+        >🔑 Unduh Kunci Privat</a
+      >
+
+      <hr />
+      <a href="{{ url_for('index') }}">🏠 Kembali ke Beranda</a>
+    </div>
+  </body>
+</html>
