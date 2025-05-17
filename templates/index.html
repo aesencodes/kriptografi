@@ -1,3 +1,4 @@
+<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="id">
   <head>
@@ -7,6 +8,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
     />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -19,18 +21,92 @@
         {% endfor %}
       </ul>
       {% endif %} {% endwith %}
-      <form method="POST" enctype="multipart/form-data">
+
+      <form
+        id="encryptForm"
+        method="POST"
+        enctype="multipart/form-data"
+        action="{{ url_for('encrypt') }}"
+      >
         <label for="message">Pesan Rahasia:</label>
-        <textarea name="message" required></textarea>
+        <textarea name="message" id="message" required></textarea>
 
         <label for="audio_file">File Audio (FLAC/WAV):</label>
-        <input type="file" name="audio_file" accept=".flac,.wav" required />
+        <input
+          type="file"
+          name="audio_file"
+          id="audio_file"
+          accept=".flac,.wav"
+          required
+        />
 
-        <button type="submit">Enkripsi & Sisipkan</button>
+        <div id="fileInfo" style="display: none; margin-bottom: 15px">
+          <p>File terpilih: <span id="fileName"></span></p>
+          <p>Kapasitas maksimal: <span id="maxCapacity"></span></p>
+        </div>
+
+        <button type="submit" id="encryptBtn">Enkripsi & Sisipkan</button>
       </form>
 
       <hr />
       <a href="{{ url_for('decrypt') }}">🔓 Halaman Dekripsi</a>
     </div>
+
+    <script>
+      $(document).ready(function () {
+        // Handle file upload and show info
+        $("#audio_file").change(function () {
+          const file = this.files[0];
+          if (!file) return;
+
+          $("#fileName").text(file.name);
+          $("#fileInfo").show();
+
+          // Upload file to calculate capacity
+          const formData = new FormData();
+          formData.append("audio_file", file);
+
+          $.ajax({
+            url: "/upload_audio",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+              $("#maxCapacity").text(response.message);
+              $("#encryptForm").append(
+                `<input type="hidden" name="audio_filename" value="${response.filename}">`
+              );
+            },
+            error: function (xhr) {
+              alert(xhr.responseJSON?.error || "Error memproses file audio");
+            },
+          });
+        });
+
+        // Validate message length before submit
+        $("#encryptForm").submit(function (e) {
+          const message = $("#message").val();
+          if (!message) {
+            alert("Harap masukkan pesan rahasia");
+            return false;
+          }
+
+          const capacityText = $("#maxCapacity").text();
+          const capacity = parseInt(capacityText.match(/\d+/)?.[0]) || 0;
+
+          if (message.length * 8 > capacity) {
+            alert(
+              `Pesan terlalu panjang. Kapasitas maksimal: ${capacity} bit (${Math.floor(
+                capacity / 8
+              )} karakter)`
+            );
+            return false;
+          }
+
+          return true;
+        });
+      });
+    </script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+<!-- templates/decrypt.html -->
 <!DOCTYPE html>
 <html lang="id">
   <head>
@@ -7,6 +8,7 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='style.css') }}"
     />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -20,18 +22,40 @@
         </ul>
         {% endif %} {% endwith %}
       </div>
+
       <h1>🔓 Halaman Dekripsi</h1>
-      <form method="POST" enctype="multipart/form-data">
-        <label for="audio_file_decrypt">Pilih File Audio</label>
-        <input type="file" name="audio_file_decrypt" required />
-        <br />
-        <label for="private_key_file">Pilih File Kunci Pribadi</label>
-        <input type="file" name="private_key_file" required />
-        <br />
-        <button type="submit">Dekripsi Pesan</button>
+
+      <form method="POST" enctype="multipart/form-data" id="decryptForm">
+        <label for="audio_file_decrypt">Pilih File Audio:</label>
+        <input
+          type="file"
+          name="audio_file_decrypt"
+          id="audio_file_decrypt"
+          required
+        />
+
+        <label for="private_key_file">Pilih File Kunci Pribadi:</label>
+        <input
+          type="file"
+          name="private_key_file"
+          id="private_key_file"
+          required
+        />
+
+        <button type="submit" id="decryptBtn">Dekripsi Pesan</button>
       </form>
+
       <hr />
       <a href="{{ url_for('index') }}">🏠 Kembali ke Beranda</a>
     </div>
+
+    <script>
+      $(document).ready(function () {
+        // Show loading when decrypting
+        $("#decryptForm").submit(function () {
+          $("#decryptBtn").text("Memproses...").prop("disabled", true);
+        });
+      });
+    </script>
   </body>
 </html>

@@ -1,117 +1,154 @@
+# stego.py
 import numpy as np
 import soundfile as sf
 from scipy.fftpack import dct, idct
 import logging
+import os
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Konfigurasi logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def calculate_max_capacity_dct(audio_path):
-    """Calculate maximum number of bits that can be embedded"""
+    """Menghitung kapasitas maksimal bit yang dapat disisipkan
+    
+    Args:
+        audio_path: Path ke file audio
+    
+    Returns:
+        Jumlah bit maksimal yang dapat disisipkan
+    """
     try:
-        data, _ = sf.read(audio_path)
-        return int(len(data) * 0.7)  # Extend capacity to 70%
+        data, samplerate = sf.read(audio_path)
+        if len(data.shape) > 1:  # Jika stereo, konversi ke mono
+            data = data.mean(axis=1)
+        return int(len(data) * 0.75)  # Gunakan 75% kapasitas untuk margin error
     except Exception as e:
-        print(f"Capacity calculation error: {str(e)}")
+        logging.error(f"Error menghitung kapasitas: {str(e)}")
         return 0
 
-
 def embed_message_dct(audio_path, message_bits, output_path):
-    """Optimized embedding for FLAC/WAV"""
+    """Sisipkan pesan ke dalam audio menggunakan DCT
+    
+    Args:
+        audio_path: Path ke file audio asli
+        message_bits: Pesan dalam bentuk bit string
+        output_path: Path untuk menyimpan audio dengan pesan tersembunyi
+    
+    Returns:
+        True jika berhasil, False jika gagal
+    """
     try:
-        # Pad message bits to make the length divisible by 8
-        if len(message_bits) % 8 != 0:
-            padding_length = 8 - (len(message_bits) % 8)
-            message_bits += '0' * padding_length
-            logging.debug(f"Padded message bits with {padding_length} zeros.")
-
+        # Baca file audio
         data, samplerate = sf.read(audio_path)
+        original_dtype = data.dtype
         
-        # Convert to mono and normalize
-        if len(data.shape) > 1:  # Check if stereo
+        # Konversi ke mono jika stereo
+        if len(data.shape) > 1:
             data = data.mean(axis=1)
-        data = data / (2**23 - 1) if data.dtype == np.int32 else data
-
-        # Apply DCT
-        dct_data = dct(data, norm='ortho')
         
-        # Calculate embedding parameters
-        msg_len = len(message_bits)
-        start_idx = len(dct_data) // 3  # Use middle third of spectrum
-        scaling = np.max(np.abs(dct_data)) * 0.01  # 1% of max coefficient
+        # Normalisasi data audio
+        if np.issubdtype(original_dtype, np.integer):
+            max_val = np.iinfo(original_dtype).max
+            data = data.astype(np.float32) / max_val
         
-        if msg_len > len(dct_data) - start_idx:
-            logging.error("Message too large to embed in the audio file.")
+        # Tambah padding ke pesan jika perlu
+        padding_length = 8 - (len(message_bits) % 8)
+        padded_bits = message_bits + '0' * padding_length
+        
+        # Hitung DCT
+        dct_coeffs = dct(data, norm='ortho')
+        
+        # Pilih frekuensi tengah untuk penyisipan
+        start_idx = len(dct_coeffs) // 4
+        end_idx = start_idx + len(padded_bits)
+        
+        if end_idx > len(dct_coeffs):
+            logging.error("Pesan terlalu panjang untuk file audio ini")
             return False
-
-        # Embed each bit
-        for i in range(msg_len):
+        
+        # Hitung scaling factor adaptif
+        scaling = np.percentile(np.abs(dct_coeffs[start_idx:end_idx]), 90) * 0.05
+        
+        # Sisipkan setiap bit
+        for i, bit in enumerate(padded_bits):
             idx = start_idx + i
-            if message_bits[i] == '1':
-                dct_data[idx] = abs(dct_data[idx]) + scaling
+            if bit == '1':
+                dct_coeffs[idx] = abs(dct_coeffs[idx]) + scaling
             else:
-                dct_data[idx] = -abs(dct_data[idx]) - scaling
+                dct_coeffs[idx] = -abs(dct_coeffs[idx]) - scaling
         
-        # Inverse DCT and save
-        stego_data = idct(dct_data, norm='ortho')
-        if data.dtype == np.int32:
-            stego_data = np.clip(stego_data * (2**23-1), -2**23, 2**23-1).astype('int32')
+        # Transformasi balik ke domain waktu
+        stego_data = idct(dct_coeffs, norm='ortho')
         
+        # Kembalikan ke format asli
+        if np.issubdtype(original_dtype, np.integer):
+            stego_data = np.clip(stego_data * max_val, np.iinfo(original_dtype).min, np.iinfo(original_dtype).max)
+            stego_data = stego_data.astype(original_dtype)
+        
+        # Simpan file output
         sf.write(output_path, stego_data, samplerate, subtype='PCM_24')
-        logging.info("Message successfully embedded into the audio file.")
+        logging.info("Pesan berhasil disisipkan ke audio")
         return True
-        
+    
     except Exception as e:
-        logging.error(f"Embedding failed: {str(e)}")
+        logging.error(f"Gagal menyisipkan pesan: {str(e)}")
         return False
 
 def extract_message_dct(audio_path):
-    """Robust extraction for 24-bit FLAC"""
+    """Ekstrak pesan dari audio menggunakan DCT
+    
+    Args:
+        audio_path: Path ke file audio dengan pesan tersembunyi
+    
+    Returns:
+        String bit yang berisi pesan, atau None jika gagal
+    """
     try:
+        # Baca file audio
         data, _ = sf.read(audio_path)
         
-        # Mono conversion and normalization
+        # Konversi ke mono jika stereo
         if len(data.shape) > 1:
             data = data.mean(axis=1)
-        data = data / (2**23 - 1) if data.dtype == np.int32 else data
-
-        # Apply DCT
-        dct_data = dct(data, norm='ortho')
         
-        # Detection parameters
-        start_idx = len(dct_data) // 3
-        threshold = np.median(np.abs(dct_data)) * 0.3  # Lower threshold for better detection
+        # Normalisasi data audio
+        if np.issubdtype(data.dtype, np.integer):
+            max_val = np.iinfo(data.dtype).max
+            data = data.astype(np.float32) / max_val
         
-        # Extract bits
-        extracted = []
-        for i in range(start_idx, len(dct_data)):
-            if abs(dct_data[i]) > threshold:
-                extracted.append('1' if dct_data[i] > 0 else '0')
-            elif extracted:  # Stop at first non-message coefficient
+        # Hitung DCT
+        dct_coeffs = dct(data, norm='ortho')
+        
+        # Temukan start index (sama dengan saat penyisipan)
+        start_idx = len(dct_coeffs) // 4
+        
+        # Ekstrak bit sampai menemukan terminasi
+        extracted_bits = []
+        threshold = np.percentile(np.abs(dct_coeffs[start_idx:]), 90) * 0.03
+        
+        # Ekstrak minimal 256 bytes (untuk RSA 2048-bit)
+        min_bits = 2048
+        max_bits = 2048 + 64  # Margin kecil
+        
+        for i in range(start_idx, len(dct_coeffs)):
+            val = dct_coeffs[i]
+            if abs(val) > threshold:
+                extracted_bits.append('1' if val > 0 else '0')
+                # Hentikan setelah mendapat cukup bit
+                if len(extracted_bits) >= max_bits:
+                    break
+            elif len(extracted_bits) >= min_bits:
                 break
-
-        # Log extracted bits and their length
-        logging.debug(f"Extracted bits: {''.join(extracted)}")
-        logging.debug(f"Number of extracted bits: {len(extracted)}")
-
-        if not extracted:
-            logging.warning("No message bits were extracted from the audio file.")
-            return None
-
-        # Ensure extracted bits are divisible by 8
-        if len(extracted) % 8 != 0:
-            extra_bits = len(extracted) % 8
-            logging.warning(f"Truncating {extra_bits} extra bits to make the length divisible by 8.")
-            extracted = extracted[:-(extra_bits)]
-
-        if len(extracted) % 8 == 0:
-            logging.info("Message bits successfully extracted from the audio file.")
-            return ''.join(extracted)
-        else:
-            logging.error("Extracted bits are still not a valid length (not divisible by 8).")
+        
+        if len(extracted_bits) < min_bits:
+            logging.warning("Tidak cukup bit yang diekstrak")
             return None
         
+        # Potong ke panjang yang tepat (2048 bit untuk RSA 2048-bit)
+        extracted_bits = extracted_bits[:2048]
+        
+        return ''.join(extracted_bits)
+    
     except Exception as e:
-        logging.error(f"Extraction failed: {str(e)}")
+        logging.error(f"Gagal ekstrak pesan: {str(e)}")
         return None
-
