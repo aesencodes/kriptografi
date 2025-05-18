@@ -1,4 +1,3 @@
-# stego.py
 import numpy as np
 import soundfile as sf
 from scipy.fftpack import dct, idct

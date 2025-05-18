@@ -1,4 +1,3 @@
-# app.py
 import os
 import uuid
 import shutil
@@ -18,7 +17,7 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['KEY_FOLDER'] = 'static/keys'
 app.config['ALLOWED_EXTENSIONS'] = {'flac', 'wav'}
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 app.secret_key = os.urandom(24)
 
 # Create directories if they don't exist
@@ -196,9 +195,4 @@ def download_key(filename):
     return send_from_directory(directory, os.path.basename(filename), as_attachment=True)
 
 if __name__ == '__main__':
-    # Remove SSL context if you don't have certificates
     app.run(debug=True)
-    
-    # If you have SSL certificates, use this instead:
-    # context = ('cert.pem', 'key.pem')  # Path to your SSL certificates
-    # app.run(debug=True, ssl_context=context)
