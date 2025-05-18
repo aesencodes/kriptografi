@@ -1,0 +1,1 @@
+Ini adalah pesan rahasia yang disisipkan ke dalam file audio menggunakan steganografi dan enkripsi RSA. Panjang pesan ini tidak boleh lebih dari 190 karakter.
