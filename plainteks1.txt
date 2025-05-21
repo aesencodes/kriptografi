@@ -1,0 +1,1 @@
+Data rahasia disisipkan ke dalam audio menggunakan metode steganografi dan enkripsi RSA.

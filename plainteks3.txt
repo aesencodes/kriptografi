@@ -1,0 +1,1 @@
+Sistem ini menggabungkan algoritma RSA-OAEP dan SHA-256, serta metode penyisipan berbasis DCT untuk menyembunyikan plainteks dalam file audio, yang menjaga kerahasiaan dan integritas data.

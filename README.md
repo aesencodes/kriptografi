@@ -34,25 +34,34 @@ pip3 install -r requirements.txt
 
 ## 📂 Struktur Direktori
 
+```
 kriptografi/
 │
-├── app.py # Aplikasi Flask utama
-├── encryptor.py # Modul untuk enkripsi dan dekripsi RSA
-├── stego.py # Modul untuk steganografi audio berbasis DCT
+├── audio_files/            # Direktori untuk menyimpan file audio
 │
-├── templates/ # Folder HTML untuk tampilan web
-│ ├── index.html
-│ ├── embed_result.html
-│ ├── decrypt.html
-│ └── decrypt_result.html
+├── app.py                  # Aplikasi utama berbasis Flask
+├── encryptor.py            # Modul untuk proses enkripsi dan dekripsi RSA
+├── stego.py                # Modul untuk proses steganografi audio berbasis DCT
+├── testing.py              # Script untuk melakukan pengujian sistem
+├── audio_spec.py           # Script untuk menampilkan spesifikasi file audio
+├── plainteks1.txt          # File teks contoh untuk pengujian enkripsi
+├── plainteks2.txt          # File teks contoh untuk pengujian enkripsi
+├── plaintext3.txt          # File teks contoh untuk pengujian enkripsi
 │
-├── static/ # Folder untuk file CSS
-│ └── style.css
+├── templates/              # Folder berisi file HTML untuk antarmuka web
+│   ├── index.html
+│   ├── embed_result.html
+│   ├── decrypt.html
+│   └── decrypt_result.html
 │
-├── uploads/ # Folder untuk file audio yang diunggah
-├── keys/ # Folder sementara untuk menyimpan kunci privat RSA
-├── README.md # Dokumentasi ini
-└── requirements.txt # Daftar pustaka Python yang digunakan
+├── static/                 # Folder untuk aset statis
+│   └── style.css           # File CSS untuk styling halaman web
+│   └── uploads/            # Folder untuk menyimpan file audio yang telah dienkripsi
+│   └── keys/               # Folder sementara untuk menyimpan kunci privat RSA
+│
+├── README.md               # Dokumentasi proyek ini
+└── requirements.txt        # Daftar dependensi Python yang diperlukan
+```
 
 ---
 
@@ -103,3 +112,4 @@ kriptografi/
 ## 👤 Kontributor
 
 - Adjie Surya Nugraha (118140146) - Kriptografi RB
+- Slamet Nugroho (118140189) - Kriptografi RB

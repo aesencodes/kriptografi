@@ -185,4 +185,4 @@ def run_tests_on_all_audio(audio_folder, data_path):
 
 # ======== Main Entry Point ========
 if __name__ == '__main__':
-    run_tests_on_all_audio('audio_files', 'plainteks.txt')
+    run_tests_on_all_audio('audio_files', 'plainteks3.txt')

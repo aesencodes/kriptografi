@@ -1,5 +1,6 @@
 Flask
+Werkzeug
 pycryptodome
+numpy
 soundfile
 scipy
-numpy
